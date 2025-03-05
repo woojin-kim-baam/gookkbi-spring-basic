@@ -1,10 +1,14 @@
 package com.korit.basic.service.implement;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.BadRequest;
 
+import com.korit.basic.dto.GetUserResponseDto;
 import com.korit.basic.dto.PostUserRequestDto;
 import com.korit.basic.dto.ResponseDto;
 import com.korit.basic.entity.UserEntity;
@@ -21,6 +25,44 @@ public class UserServiceImplement implements UserService{
 
     private final UserRepository userRepository;
     // 쓰고 다시 userRepository로
+
+    // * (2) implement에서 옴 
+    public void queryMethod(){
+        UserEntity userEntity = new UserEntity();
+
+        // save(엔터티) : 인스턴스를 레코드로 저장하는 메서드
+        // 만약 엔터티의 ID에 해당하는 데이터가 동일한 데이터가 테이블에 존재한다면 수정
+        // 만약 엔터티의 ID에 해당하는 데이터가 동일한 데이터가 테이블에 존재하지 않는다면 삽입 
+        userRepository.save(userEntity);
+
+        // saveAll(엔터티 컬렉션) : 컬렉션으로 관리되어지는 엔터티 인스턴스를 모두 저장
+        List<UserEntity> entities = new ArrayList<>();
+        userRepository.saveAll(entities);
+
+        // findByID(아이디 데이터) : 아이디를 기준으로 조회
+        // - 반환 타입이 Optional 타입으로 반환되기 때문에 불편함
+        // - 직접 쿼리 메서드를 작성하는 것이 편함
+        userEntity = userRepository.findById("아이디").get(); 
+        // optional이라는 타입으로 뜨기에 get메서드를 사용해야 데이터를 가져올 수 있다, 존재하지 않는다면 에러가 터진다, 그래서 직접적으로 쿼리메서드 작성이 훨씬 ㄱㅊ음
+
+        // findAll() : 전체 레코드 조회
+        entities = userRepository.findAll();
+
+        // existsById(아이디 데이터) : 아이디 기준으로 레코드 존재여부 반환
+        boolean existed = userRepository.existsById("아이디");
+
+        // deleteById(아이디 데이터) : 아이디 기준으로 레코드 삭제
+        userRepository.deleteById("아이디");
+
+        // delete(엔터티) : 해당 엔터티 레코드를 삭제
+        userRepository.delete(userEntity);
+       
+        // deleteAll(엔터티 컬렉션) : 해당하는 엔터티 레코드 리스트를 삭제
+        userRepository.deleteAll(entities);
+
+        // * 다시 userRepository로
+    }
+
     @Override
     public ResponseEntity<ResponseDto> postUser(PostUserRequestDto dto) {
 
@@ -45,19 +87,41 @@ public class UserServiceImplement implements UserService{
 
          // ! 이건 깨끗하게
          String userId = dto.getUserId();
-         Boolean isExistUserId = userRepository.existsByUserID(userId);
-         if(isExistUserId) {
-            ResponseDto responseBody = new ResponseDto("DI", "Duplicated Id");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+        String userTelNumber = dto.getUserTelNumber();
+
+        try {
+            boolean isExistUserId = userRepository.existsByUserId(userId);
+
+            if(isExistUserId) return ResponseDto.duplicatedId();
+            boolean isExistsUserTelNumber = userRepository.existsByUserTelNumber(userTelNumber);
+            if(isExistsUserTelNumber) return ResponseDto.duplicatedTelNumber();
+            UserEntity userEntity = new UserEntity(dto);
+            userRepository.save(userEntity);
+
+
+        }catch(Exception exception){
+            exception.printStackTrace();
+            return ResponseDto.databaseError();
         }
 
-        String userTelNumber = dto.getUserTelNumber();
+
+        // boolean isExistUserId = userRepository.existsByUserId(userId);
+        //  if(isExistUserId) {
+        //     ResponseDto responseBody = new ResponseDto("DI", "Duplicated Id");
+        //     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+        // }
+        // ! 이건 또정리(2)
+        //  if(isExistUserId) return ResponseDto.duplicatedId();
+
         // ! 이건 깨끗하게
-        boolean isExistsUserTelNumber = userRepository.existsByUserTelNumber(userTelNumber);
-        if(isExistsUserTelNumber) {
-            ResponseDto responseBody = new ResponseDto("DT", "Duplicated Tel number");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
-        }
+        // boolean isExistsUserTelNumber = userRepository.existsByUserTelNumber(userTelNumber);
+        // if(isExistsUserTelNumber) {
+        //     ResponseDto responseBody = new ResponseDto("DT", "Duplicated Tel number");
+        //     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+        // }
+        // ! 이건 또정리(2)
+            // if(isExistsUserTelNumber) return ResponseDto.duplicatedTelNumber();
+
         //? UserEntity userEntity = new UserEntity(userId, dto.getUserPassword(), dto.getUserName(), dto.getUserAddress(), userTelNumber );
 
         //! 빌더패턴으로 바꾸기
@@ -73,14 +137,56 @@ public class UserServiceImplement implements UserService{
         //                             .build();
 
         // 선생님 방식
-        UserEntity userEntity = new UserEntity(dto);
+        // UserEntity userEntity = new UserEntity(dto);
         
         // save시키기
-        userRepository.save(userEntity);
+        // userRepository.save(userEntity);
 
-        ResponseDto response = new ResponseDto("SU", "Success.");
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        // ! 정리해서 지금 지운거 (2)
+        // ResponseDto response = new ResponseDto("SU", "Success.");
+        // return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        // ! 이건 또정리(2)
+        return ResponseDto.success(HttpStatus.CREATED);
+
         // 이렇게 다만들면 userController로 다시 ㄱㄱㄱ
     }
+
+    // * UserService에서 옴
+    @Override
+    public ResponseEntity<? super GetUserResponseDto> getUser(String userId) {
+        
+        UserEntity userEntity = null;
+        
+        try {
+            userEntity = userRepository.findByUserId(userId);
+            if (userEntity == null) return ResponseDto.noExistsUser();
+        } catch(Exception exception) {
+            exception.printStackTrace();
+            return ResponseDto.databaseError();
+        }
+        
+        return GetUserResponseDto.success(userEntity);
+        
+    }
     
-}
+
+    // * UserService에서 옴
+    @Override
+    public ResponseEntity<ResponseDto> deleteUser(String userId) {
+        
+        try{
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            if(userEntity == null) return ResponseDto.noExistsUser();
+
+            userRepository.delete(userEntity); 
+        }catch(Exception exception) {
+            exception.printStackTrace();
+            return ResponseDto.databaseError();
+        }
+
+        return ResponseDto.success(HttpStatus.OK);
+
+    }
+    
+  }
