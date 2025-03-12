@@ -3,15 +3,19 @@ package com.korit.basic.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.korit.basic.dto.GetUserListResponseDto;
 import com.korit.basic.dto.GetUserResponseDto;
+import com.korit.basic.dto.PatchUserRequestDto;
 import com.korit.basic.dto.PostUserRequestDto;
 import com.korit.basic.dto.ResponseDto;
+import com.korit.basic.entity.UserEntity;
 import com.korit.basic.service.UserService;
 
 import jakarta.validation.Valid;
@@ -38,6 +42,14 @@ public class UserController {
 
     // ExceptionHandler로 다시 가자구
 
+    // GetUserListResponseDto에서 옴 (3)
+    @GetMapping("")
+    public ResponseEntity<? super GetUserListResponseDto> getUserList(){
+        ResponseEntity<? super GetUserListResponseDto> response = userService.getUserList();
+        return response;
+    }
+    // service 로
+
     // * GetUserResponseDto에서 옴
     @GetMapping("/{userId}")
     public ResponseEntity<? super GetUserResponseDto> getUser(
@@ -57,5 +69,14 @@ public class UserController {
         return response;
     }
     // * Service로 출동
+
+    @PatchMapping("/{userId}")
+    public ResponseEntity<ResponseDto> patchUser(
+        @PathVariable("userId") String userId,
+        @RequestBody @Valid PatchUserRequestDto requestBody
+    ){
+        ResponseEntity<ResponseDto> response = userService.patchUser(userId, requestBody);
+        return response;
+    }
 
 }

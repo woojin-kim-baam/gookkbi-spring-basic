@@ -9,6 +9,7 @@ import com.korit.basic.entity.UserEntity;
 import lombok.Getter;
 
 // *
+// * 여기가 READ의 시작
 @Getter
 public class GetUserResponseDto extends ResponseDto {
     private String userId;

@@ -29,11 +29,16 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     UserEntity findByUserTelNumber(String userTelNumber);
     // 3. 바로 위에꺼 적고 다시 UserServiceImplement로
 
+    // UserServiceImplement에서 옴(3)
+    List<UserEntity> findByOrderByUserIdAsc();
+
+
+
     // 여기서는 ServiceImplement 깨끗하게 만들기 위해 바꾸는거
     boolean existsByUserId(String userId);
     boolean existsByUserTelNumber(String userTelNumber);
 
-    //* 2일차임 1 -> 2-1
+    //* 2일차임 1 -> 2-1 밑에꺼 다 2일차(여기서 시작하는 거는 아직 CREATE 부분)
     // QueryMethod : 
     // - JpaRepository의 메서드 선언시에 지정된 규칙에 따라 메서드명을 작성하면 JPA가 SQL을 만들어주는 방법
 
@@ -85,7 +90,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     @Query(value = "SELECT u FROM user u WHERE u.userName = ?1 AND u.userTelNumber = ?2") // 여기서 u 가 userTable(UserEntity)의 인스턴스임
     List<UserEntity> getUserList(String userName, String userTelNumber);
 
-    @Query(value = "SELECT u FROM user u WHERE u.userName = :name AND u.userTelNumber = :telNumber") // 여기서 u 가 userTable(UserEntity)의 인스턴스임
+    @Query(value = "SELECT u FROM user u WHERE u.userName = :name AND u.userTelNumber = :telNumber")
     List<UserEntity> getUserList2(
         @Param("name")String userName, 
         @Param("telNumber")String userTelNumber

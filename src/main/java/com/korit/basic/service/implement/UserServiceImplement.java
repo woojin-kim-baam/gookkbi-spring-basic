@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.BadRequest;
 
+import com.korit.basic.dto.GetUserListResponseDto;
 import com.korit.basic.dto.GetUserResponseDto;
+import com.korit.basic.dto.PatchUserRequestDto;
 import com.korit.basic.dto.PostUserRequestDto;
 import com.korit.basic.dto.ResponseDto;
 import com.korit.basic.entity.UserEntity;
@@ -152,6 +154,24 @@ public class UserServiceImplement implements UserService{
         // 이렇게 다만들면 userController로 다시 ㄱㄱㄱ
     }
 
+    // UserService에서 옴(3)
+    @Override
+    public ResponseEntity<? super GetUserListResponseDto> getUserList() {
+
+        List<UserEntity> userEntities = new ArrayList<>();
+
+        try {
+            // 이거 만들때 UserRepository가서 findByOrderByUserIdAsc만들고 옴
+            userEntities =  userRepository.findByOrderByUserIdAsc();
+
+        }catch(Exception e) {
+            e.printStackTrace();
+            return ResponseDto.databaseError();
+        }
+        return GetUserListResponseDto.success(userEntities);
+    }
+
+
     // * UserService에서 옴
     @Override
     public ResponseEntity<? super GetUserResponseDto> getUser(String userId) {
@@ -178,15 +198,35 @@ public class UserServiceImplement implements UserService{
         try{
             UserEntity userEntity = userRepository.findByUserId(userId);
             if(userEntity == null) return ResponseDto.noExistsUser();
-
+            
             userRepository.delete(userEntity); 
         }catch(Exception exception) {
             exception.printStackTrace();
             return ResponseDto.databaseError();
         }
+        
+        return ResponseDto.success(HttpStatus.OK);
+        
+    }
+    
+    // UserService에서 옴
+    @Override
+    public ResponseEntity<ResponseDto> patchUser(String userId, PatchUserRequestDto dto) {
+        try{
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            if(userEntity == null) return ResponseDto.noExistsUser();
+
+            userEntity.patch(dto);
+            userRepository.save(userEntity);
+            
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseDto.databaseError();
+        }
 
         return ResponseDto.success(HttpStatus.OK);
-
     }
+
+    
     
   }
